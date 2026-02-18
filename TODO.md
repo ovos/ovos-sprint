@@ -6,9 +6,12 @@
 
 ## Low Priority
 
-### Feature: add a new toggle for abstract week view
+### Google Single Sign-On (SSO)
 
-- [ ] TBD
+- [ ] Add a new alternative login method: Google Authentication (Google Workspace Domain/Key must be configurable)
+- [ ] New Users should have the user role.
+- [ ] If a user with the same email already is registered, merge the user accounts. Allow logging into the user account via password or via Google Authentication.
+- [ ] If a member with the same email exists, associate the user to the member.
 
 ### Code Splitting & Bundle Optimization
 
@@ -29,9 +32,9 @@
 
 **Note**: Runtime performance is already optimized (Phase 4 complete). Code splitting improves initial page load, not runtime violations.
 
-### Google Authentication
+### Feature: add a new toggle for abstract week view
 
-- [ ] Add a new alternative login method: Google Authentication (Google Workspace Domain/Key must be configurable)
+- [ ] TBD
 
 ### Internationalization (i18n)
 

@@ -68,6 +68,7 @@ VITE_WS_URL=wss://api.yourdomain.com
 ```
 
 **Important Notes:**
+
 - Use `https://` for API URL (secure HTTP)
 - Use `wss://` for WebSocket URL (secure WebSocket)
 - Both should point to your backend domain
@@ -185,13 +186,13 @@ npm error command failed
    # Ubuntu/Debian - Install complete build toolchain
    sudo apt update
    sudo apt install -y build-essential python3 python3-dev libsqlite3-dev
-   
+
    # RHEL/CentOS/Fedora
    sudo yum install -y gcc-c++ make python3 python3-devel sqlite-devel
    # or on newer systems:
    sudo dnf install -y gcc-c++ make python3 python3-devel sqlite-devel
    ```
-   
+
    **Key packages:**
    - `build-essential` / `gcc-c++ make` - C++ compiler
    - `python3-dev` / `python3-devel` - Python headers (REQUIRED for node-gyp)
@@ -207,7 +208,7 @@ npm error command failed
    # curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
    # sudo apt install -y nodejs
    ```
-   
+
    **Note:** If using Node v24+, compilation is required (no prebuilt binaries). This is normal, just ensure all build tools are installed.
 
 3. **Clean and retry:**
@@ -218,8 +219,9 @@ npm error command failed
    npm cache clean --force
    npm install
    ```
-   
+
    **If still failing, try installing better-sqlite3 directly to see full error:**
+
    ```bash
    cd backend
    npm install better-sqlite3 --verbose 2>&1 | tee better-sqlite3-install.log
@@ -372,6 +374,7 @@ echo "Backup completed: $BACKUP_FILE"
 ```
 
 Make sure the user owns the bash script and has execute permissions:
+
 ```bash
 chmod +x /backup.sh
 ```
@@ -382,32 +385,34 @@ Add to crontab for daily backups:
 0 2 * * * /backups/backup-script.sh
 ```
 
-### Production Checklist
+## Updating Production
 
-- [ ] Configure frontend environment: Create `frontend/.env.production` with `VITE_API_URL` and `VITE_WS_URL`
-- [ ] Set `NODE_ENV=production` in backend `.env`
-- [ ] Change `JWT_SECRET` to a secure random string (32+ characters)
-- [ ] Set `FRONTEND_URL` and `BACKEND_URL` in backend `.env` to your actual domains
-- [ ] Configure SMTP for email delivery (SparkPost recommended)
-- [ ] Build frontend: `cd frontend && npm run build`
-- [ ] Build backend: `cd backend && npm run build`
-- [ ] Initialize database: `cd backend && npm run db:push` (first time only)
-- [ ] Seed admin user: `cd backend && npm run db:seed` (first time only)
-- [ ] Set up reverse proxy (Apache/nginx/Caddy) for HTTPS
-- [ ] Use PM2 or systemd for process management
-- [ ] Configure SQLite backup strategy
+Run `./update-ovos-sprint.sh` to pull the latest changes, build the app and service and reload pm2 and prune development dependencies:
 
-## Summary
+```bash
+i#/!/bin/sh
 
-1. ✅ Install Node.js v20+ and npm
-2. ✅ Install system build tools (build-essential, python3)
-3. ✅ Run `npm install` (WITHOUT --production flag)
-4. ✅ Configure frontend environment variables (`frontend/.env.production`)
-5. ✅ Configure backend environment variables (`backend/.env`)
-6. ✅ Build: `npm run build`
-7. ✅ Initialize database: `cd backend && npm run db:push` (first time only)
-8. ✅ Seed admin user: `cd backend && npm run db:seed` (first time only)
-9. ✅ Set up reverse proxy (Apache/nginx)
-10. ✅ Configure process manager (PM2/systemd)
-11. ✅ Set up database backups
-12. ✅ Run the application
+. ~/.nvm/nvm.sh
+
+nvm use 20.19.6
+
+cd ovos-sprint
+
+git pull
+
+cd backend/
+
+npm install
+
+npm run build
+
+pm2 restart ovos-sprint
+
+npm prune --production
+
+cd ../frontend/
+
+npm install
+
+npm run build
+```
