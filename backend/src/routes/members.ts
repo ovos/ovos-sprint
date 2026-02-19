@@ -250,7 +250,21 @@ router.post('/:id/invite', authenticate, requireAdmin, async (req: AuthRequest, 
     })
 
     if (existingInvitation) {
-      return res.status(400).json({ error: 'Invitation already sent for this email' })
+      const now = new Date()
+      const expiresAt = new Date(existingInvitation.expiresAt)
+
+      if (expiresAt > now) {
+        // Still valid — block resend with helpful message
+        const expiresFormatted = expiresAt.toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        })
+        return res.status(400).json({
+          error: `Invitation already pending (expires ${expiresFormatted})`
+        })
+      }
+
+      // Expired — delete old invitation so a fresh one can be created
+      await db.delete(invitations).where(eq(invitations.id, existingInvitation.id))
     }
 
     // Create invitation
