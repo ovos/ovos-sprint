@@ -16,9 +16,10 @@ pm2 restart ovos-sprint
 npm prune --production
 cd ..
 
-# Frontend - clean install needed because lock file is generated on Windows
+# Frontend - ignore lock file because it's generated on Windows
+# and doesn't include Linux platform-specific binaries (e.g. rollup)
 cd frontend/
-rm -rf node_modules
+rm -rf node_modules package-lock.json
 npm install
 npm run build
 cd ..
