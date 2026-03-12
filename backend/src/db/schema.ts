@@ -4,7 +4,8 @@ import { sql, relations } from 'drizzle-orm'
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
+  passwordHash: text('password_hash'),
+  googleId: text('google_id').unique(),
   role: text('role', { enum: ['admin', 'project_manager', 'user'] }).notNull().default('user'),
   createdAt: text('created_at')
     .notNull()

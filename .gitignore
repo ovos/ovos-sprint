@@ -58,6 +58,9 @@ CLAUDE.md
 # Windows artifacts
 nul
 
+# Debug files
+debug/
+
 # Test coverage
 coverage/
 *.lcov

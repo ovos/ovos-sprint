@@ -97,6 +97,10 @@ export const updateAssignmentGroupSchema = z.object({
   comment: z.string().optional().nullable(),
 })
 
+export const googleAuthSchema = z.object({
+  idToken: z.string().min(1),
+})
+
 export const forgotPasswordSchema = z.object({
   email: z.string().email(),
 })

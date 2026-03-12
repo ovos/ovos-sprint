@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { db, users, invitations, teamMembers, teamTeamMembers, passwordResets } from '../db/index.js'
 import { generateToken } from '../utils/jwt.js'
-import { loginSchema, registerSchema, inviteSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validation.js'
+import { loginSchema, registerSchema, inviteSchema, googleAuthSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validation.js'
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js'
 import { eq } from 'drizzle-orm'
 import { emailService } from '../services/email/emailService.js'
@@ -13,6 +13,7 @@ import {
   getPasswordResetExpiry
 } from '../utils/passwordReset.js'
 import { rateLimiter } from '../middleware/rateLimiter.js'
+import { verifyGoogleToken } from '../utils/googleAuth.js'
 
 const router = Router()
 
@@ -27,6 +28,10 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: 'This account uses Google Sign-In. Please log in with Google.' })
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
@@ -51,6 +56,83 @@ router.post('/login', async (req, res) => {
     })
   } catch (error) {
     console.error('Login error:', error)
+    res.status(400).json({ error: 'Invalid request' })
+  }
+})
+
+// Google Sign-In
+router.post('/google', async (req, res) => {
+  try {
+    const { idToken } = googleAuthSchema.parse(req.body)
+
+    const payload = await verifyGoogleToken(idToken)
+    if (!payload) {
+      return res.status(401).json({ error: 'Invalid Google token' })
+    }
+
+    // Check domain restriction
+    const allowedDomain = process.env.GOOGLE_ALLOWED_DOMAIN
+    if (allowedDomain && payload.hd !== allowedDomain) {
+      return res.status(403).json({
+        error: `Only ${allowedDomain} accounts are allowed`
+      })
+    }
+
+    // Try to find user by googleId first, then by email
+    let user = await db.query.users.findFirst({
+      where: eq(users.googleId, payload.sub),
+    })
+
+    if (!user) {
+      // Check if a user with this email already exists (account merge)
+      user = await db.query.users.findFirst({
+        where: eq(users.email, payload.email),
+      })
+
+      if (user) {
+        // Link Google ID to existing account
+        await db.update(users)
+          .set({ googleId: payload.sub })
+          .where(eq(users.id, user.id))
+        user = { ...user, googleId: payload.sub }
+      } else {
+        // Create new user
+        const [newUser] = await db.insert(users).values({
+          email: payload.email,
+          googleId: payload.sub,
+          role: 'user',
+        }).returning()
+        user = newUser
+
+        // Link to team member if one exists with this email
+        const member = await db.query.teamMembers.findFirst({
+          where: eq(teamMembers.email, payload.email),
+        })
+        if (member) {
+          await db.update(teamMembers)
+            .set({ userId: newUser.id })
+            .where(eq(teamMembers.id, member.id))
+        }
+      }
+    }
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    })
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
+    })
+  } catch (error) {
+    console.error('Google auth error:', error)
     res.status(400).json({ error: 'Invalid request' })
   }
 })

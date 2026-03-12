@@ -2,7 +2,7 @@
 
 Workload management and resource planning tool for IT project managers.
 
-![ovos Sprint 🏃‍♂️‍➡️](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![ovos Sprint 🏃‍♂️‍➡️](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## Features
@@ -55,15 +55,18 @@ Workload management and resource planning tool for IT project managers.
 ## Current Status & Limitations
 
 ### Language Support
+
 - **UI Language**: English (hardcoded)
 - **Date Formatting**: German locale (`de-AT`)
 - **Internationalization**: Not currently implemented (see `TODO.md` for future plans)
 
 ### Testing
+
 - **Test Coverage**: No automated tests currently configured
 - **Planned**: Vitest + @testing-library/react (see `TODO.md`)
 
 ### Development Notes
+
 - Application is production-ready for single-language deployment
 - Multi-language support and comprehensive testing are planned future enhancements
 - See `TODO.md` for complete feature roadmap
@@ -135,6 +138,7 @@ npm run dev
 ```
 
 The application will be available at:
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 
@@ -153,4 +157,4 @@ For issues, questions, or suggestions:
 - **Email**: rohschinken@gmail.com
 - **GitHub Issues**: [https://github.com/rohschinken/ovos-sprint/issues](https://github.com/rohschinken/ovos-sprint/issues)
 
-_Last Updated: January 2026_
+_Last Updated: March 2026_

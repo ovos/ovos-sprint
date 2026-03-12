@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useAuthStore } from './store/auth'
 import { Toaster } from './components/ui/toaster'
 import { useInitializeTheme } from './hooks/use-theme'
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 // Pages
 import LoginPage from './pages/LoginPage'
@@ -59,7 +62,7 @@ function App() {
     }
   }, [token, fetchUser])
 
-  return (
+  const content = (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
@@ -123,6 +126,16 @@ function App() {
       <Toaster />
     </BrowserRouter>
   )
+
+  if (GOOGLE_CLIENT_ID) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        {content}
+      </GoogleOAuthProvider>
+    )
+  }
+
+  return content
 }
 
 export default App

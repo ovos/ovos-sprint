@@ -7,6 +7,7 @@ interface AuthState {
   token: string | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  googleLogin: (idToken: string) => Promise<void>
   register: (email: string, password: string, token: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
@@ -23,6 +24,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true })
     try {
       const response = await api.post('/auth/login', { email, password })
+      const { token, user } = response.data
+      localStorage.setItem('token', token)
+      set({ token, user, isLoading: false })
+    } catch (error) {
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
+  googleLogin: async (idToken: string) => {
+    set({ isLoading: true })
+    try {
+      const response = await api.post('/auth/google', { idToken })
       const { token, user } = response.data
       localStorage.setItem('token', token)
       set({ token, user, isLoading: false })
