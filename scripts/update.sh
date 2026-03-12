@@ -11,6 +11,7 @@ git pull
 # Backend
 cd backend/
 npm install
+npm run db:migrate
 npm run build
 pm2 restart ovos-sprint
 npm prune --production

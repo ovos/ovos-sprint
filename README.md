@@ -2,8 +2,8 @@
 
 Workload management and resource planning tool for IT project managers.
 
-![ovos Sprint 🏃‍♂️‍➡️](https://img.shields.io/badge/version-1.1.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+ovos Sprint 🏃‍♂️‍➡️
+License
 
 ## Features
 
@@ -139,8 +139,8 @@ npm run dev
 
 The application will be available at:
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3001
+- **Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:3001](http://localhost:3001)
 
 ## Production Deployment
 
@@ -154,7 +154,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For issues, questions, or suggestions:
 
-- **Email**: rohschinken@gmail.com
+- **Email**: [rohschinken@gmail.com](mailto:rohschinken@gmail.com)
 - **GitHub Issues**: [https://github.com/rohschinken/ovos-sprint/issues](https://github.com/rohschinken/ovos-sprint/issues)
 
 _Last Updated: March 2026_
