@@ -6,6 +6,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./src/tests/setup.ts'],
+    exclude: ['node_modules', 'dist'],
+    fileParallelism: false,
     env: {
       // Set test database BEFORE any imports happen
       NODE_ENV: 'test',

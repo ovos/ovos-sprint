@@ -15,13 +15,13 @@ describe('Teams Batch Operations', () => {
     // Create admin user
     const hashedPassword = await bcrypt.hash('testpassword123', 10)
     const [adminUser] = await db.insert(users).values({
-      email: 'admin@test.com',
+      email: 'teams-admin@test.com',
       passwordHash: hashedPassword,
       role: 'admin',
     }).returning()
 
     adminToken = jwt.sign(
-      { userId: adminUser.id, role: adminUser.role },
+      { userId: adminUser.id, email: adminUser.email, role: adminUser.role },
       process.env.JWT_SECRET || 'test-secret'
     )
   })
@@ -40,9 +40,9 @@ describe('Teams Batch Operations', () => {
 
     // Create test members
     const memberData = [
-      { firstName: 'Alice', lastName: 'Smith', email: 'alice@test.com' },
-      { firstName: 'Bob', lastName: 'Jones', email: 'bob@test.com' },
-      { firstName: 'Charlie', lastName: 'Brown', email: 'charlie@test.com' },
+      { firstName: 'Alice', lastName: 'Smith', email: 'teams-alice@test.com' },
+      { firstName: 'Bob', lastName: 'Jones', email: 'teams-bob@test.com' },
+      { firstName: 'Charlie', lastName: 'Brown', email: 'teams-charlie@test.com' },
     ]
 
     const createdMembers = await db.insert(teamMembers).values(memberData).returning()
@@ -54,7 +54,7 @@ describe('Teams Batch Operations', () => {
     await db.delete(teamTeamMembers)
     await db.delete(teamMembers)
     await db.delete(teams)
-    await db.delete(users).where(eq(users.email, 'admin@test.com'))
+    await db.delete(users).where(eq(users.email, 'teams-admin@test.com'))
   })
 
   describe('POST /api/teams/:id/members/batch', () => {

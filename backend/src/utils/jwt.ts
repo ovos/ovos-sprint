@@ -1,6 +1,10 @@
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production'
+const DEFAULT_SECRET = 'development-secret-change-in-production'
+
+function getSecret(): string {
+  return process.env.JWT_SECRET || DEFAULT_SECRET
+}
 
 export interface JWTPayload {
   userId: number
@@ -9,9 +13,9 @@ export interface JWTPayload {
 }
 
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign(payload, getSecret(), { expiresIn: '7d' })
 }
 
 export function verifyToken(token: string): JWTPayload {
-  return jwt.verify(token, JWT_SECRET) as JWTPayload
+  return jwt.verify(token, getSecret()) as JWTPayload
 }

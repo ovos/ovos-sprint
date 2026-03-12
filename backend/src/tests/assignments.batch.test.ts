@@ -19,27 +19,27 @@ describe('Project Assignments Batch Operations', () => {
     // Create admin user
     const hashedPassword = await bcrypt.hash('testpassword123', 10)
     const [adminUser] = await db.insert(users).values({
-      email: 'admin@test.com',
+      email: 'assign-admin@test.com',
       passwordHash: hashedPassword,
       role: 'admin',
     }).returning()
     adminUserId = adminUser.id
 
     adminToken = jwt.sign(
-      { userId: adminUser.id, role: adminUser.role },
+      { userId: adminUser.id, email: adminUser.email, role: adminUser.role },
       process.env.JWT_SECRET || 'test-secret'
     )
 
     // Create project manager user
     const [pmUser] = await db.insert(users).values({
-      email: 'pm@test.com',
+      email: 'assign-pm@test.com',
       passwordHash: hashedPassword,
       role: 'project_manager',
     }).returning()
     pmUserId = pmUser.id
 
     pmToken = jwt.sign(
-      { userId: pmUser.id, role: pmUser.role },
+      { userId: pmUser.id, email: pmUser.email, role: pmUser.role },
       process.env.JWT_SECRET || 'test-secret'
     )
   })
@@ -69,9 +69,9 @@ describe('Project Assignments Batch Operations', () => {
 
     // Create test members
     const memberData = [
-      { firstName: 'Alice', lastName: 'Smith', email: 'alice@test.com' },
-      { firstName: 'Bob', lastName: 'Jones', email: 'bob@test.com' },
-      { firstName: 'Charlie', lastName: 'Brown', email: 'charlie@test.com' },
+      { firstName: 'Alice', lastName: 'Smith', email: 'assign-alice@test.com' },
+      { firstName: 'Bob', lastName: 'Jones', email: 'assign-bob@test.com' },
+      { firstName: 'Charlie', lastName: 'Brown', email: 'assign-charlie@test.com' },
     ]
 
     const createdMembers = await db.insert(teamMembers).values(memberData).returning()
@@ -84,8 +84,8 @@ describe('Project Assignments Batch Operations', () => {
     await db.delete(projects)
     await db.delete(teamMembers)
     await db.delete(customers)
-    await db.delete(users).where(eq(users.email, 'admin@test.com'))
-    await db.delete(users).where(eq(users.email, 'pm@test.com'))
+    await db.delete(users).where(eq(users.email, 'assign-admin@test.com'))
+    await db.delete(users).where(eq(users.email, 'assign-pm@test.com'))
   })
 
   describe('POST /api/assignments/projects/batch', () => {
