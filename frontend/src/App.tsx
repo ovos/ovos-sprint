@@ -1,25 +1,28 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useAuthStore } from './store/auth'
 import { Toaster } from './components/ui/toaster'
 import { useInitializeTheme } from './hooks/use-theme'
+import { PageLoader } from './components/PageLoader'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
-// Pages
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
-import UsersPage from './pages/UsersPage'
-import TeamsPage from './pages/TeamsPage'
-import CustomersPage from './pages/CustomersPage'
-import MembersPage from './pages/MembersPage'
-import ProjectsPage from './pages/ProjectsPage'
-import SettingsPage from './pages/SettingsPage'
+// Layout is eagerly loaded (shared shell for all authenticated routes)
 import Layout from './components/Layout'
+
+// Pages are lazy-loaded for route-based code splitting
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const UsersPage = lazy(() => import('./pages/UsersPage'))
+const TeamsPage = lazy(() => import('./pages/TeamsPage'))
+const CustomersPage = lazy(() => import('./pages/CustomersPage'))
+const MembersPage = lazy(() => import('./pages/MembersPage'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((state) => state.token)
@@ -64,6 +67,7 @@ function App() {
 
   const content = (
     <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -123,6 +127,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
+      </Suspense>
       <Toaster />
     </BrowserRouter>
   )

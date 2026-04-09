@@ -6,24 +6,7 @@ nothing
 
 ## Medium Priority
 
-### Code Splitting & Bundle Optimization
-
-- [ ] Implement route-based code splitting with React lazy/Suspense
-- [ ] Split heavy libraries (Framer Motion, date libraries) into separate chunks
-- [ ] Configure Vite rollupOptions for manual chunking
-- [ ] Lazy load admin-only components for non-admin users
-- [ ] Measure bundle size reduction and initial load time improvement
-
-**Current State**: Single >700KB JavaScript bundle. Bundle size warning from Vite suggests splitting.
-
-**Expected Impact**:
-
-- Initial bundle: >700KB → ~350KB (main) + smaller route chunks
-- Faster Time to Interactive (TTI)
-- Better Lighthouse score
-- Improved mobile performance
-
-**Note**: Runtime performance is already optimized (Phase 4 complete). Code splitting improves initial page load, not runtime violations.
+nothing
 
 ## Low Priority
 
