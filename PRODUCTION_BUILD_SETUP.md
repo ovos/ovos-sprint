@@ -387,32 +387,32 @@ Add to crontab for daily backups:
 
 ## Updating Production
 
-Run `./update-ovos-sprint.sh` to pull the latest changes, build the app and service and reload pm2 and prune development dependencies:
+Run `./update-ovos-sprint.sh` to pull the latest changes, run migrations, build, restart the backend, and rebuild the frontend:
 
 ```bash
-i#/!/bin/sh
+#!/bin/sh
+set -e
 
 . ~/.nvm/nvm.sh
-
 nvm use 20.19.6
 
 cd ovos-sprint
 
 git pull
 
+# Backend
 cd backend/
-
 npm install
-
+npm run db:migrate
 npm run build
-
 pm2 restart ovos-sprint
-
 npm prune --production
+cd ..
 
-cd ../frontend/
-
+# Frontend
+cd frontend/
+rm -rf node_modules package-lock.json
 npm install
-
 npm run build
+cd ..
 ```
