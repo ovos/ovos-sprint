@@ -2,6 +2,8 @@
 
 ## High Priority
 
+none
+
 ### Performance: Stabilize Timeline callback props with `useCallback`
 
 - [ ] `Timeline.tsx` defines `canEditAssignment`, `canEditProject`, `getGroupForDate`, `hasOverlap`, `handleDeleteDayAssignment`, and `toggleExpand` as plain functions that create new references every render. This defeats `React.memo` on `AssignmentRow`, causing all rows to re-render on any state change. Wrap these in `useCallback` with appropriate dependency arrays.

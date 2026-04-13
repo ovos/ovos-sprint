@@ -35,7 +35,8 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
 import { useAuthStore } from '@/store/auth'
-import { Plus, Pencil, Trash2, CheckCircle2, Clock, Users, Archive, Check, ChevronsUpDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, CheckCircle2, Clock, Users, Archive, Check, ChevronsUpDown, UserPlus } from 'lucide-react'
+import { CommandSeparator } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { AlertDialog } from '@/components/ui/alert-dialog'
@@ -55,6 +56,9 @@ export default function ProjectsPage() {
   const [status, setStatus] = useState<ProjectStatus>('confirmed')
   const [searchQuery, setSearchQuery] = useState('')
   const [showArchived, setShowArchived] = useState(false)
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState('')
+  const [newCustomerIcon, setNewCustomerIcon] = useState('')
   const [deleteDialog, setDeleteDialog] = useState<{
     projectId: number
     projectName: string
@@ -131,6 +135,39 @@ export default function ProjectsPage() {
       toast({ title: 'Project deleted successfully' })
     },
   })
+
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: { name: string; icon: string | null }) => {
+      const response = await api.post('/customers', data)
+      return response.data
+    },
+    onSuccess: (newCustomer) => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      setCustomerId(newCustomer.id)
+      setIsCreatingCustomer(false)
+      setNewCustomerName('')
+      setNewCustomerIcon('')
+      setCustomerSelectOpen(false)
+      toast({ title: 'Customer created and selected' })
+    },
+  })
+
+  const handleCreateCustomer = () => {
+    if (!newCustomerName.trim()) {
+      toast({ title: 'Please enter a customer name', variant: 'destructive' })
+      return
+    }
+    createCustomerMutation.mutate({
+      name: newCustomerName.trim(),
+      icon: newCustomerIcon.trim() || null,
+    })
+  }
+
+  const resetCustomerForm = () => {
+    setIsCreatingCustomer(false)
+    setNewCustomerName('')
+    setNewCustomerIcon('')
+  }
 
   const resetForm = () => {
     setCustomerId('')
@@ -495,7 +532,13 @@ export default function ProjectsPage() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Customer</Label>
-                  <Popover open={customerSelectOpen} onOpenChange={setCustomerSelectOpen}>
+                  <Popover
+                    open={customerSelectOpen}
+                    onOpenChange={(open) => {
+                      setCustomerSelectOpen(open)
+                      if (!open) resetCustomerForm()
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -519,40 +562,93 @@ export default function ProjectsPage() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search customers..." />
-                        <CommandEmpty>No customer found.</CommandEmpty>
-                        <CommandGroup>
-                          <ScrollArea className="h-64">
-                            {customers.map((customer) => (
-                              <CommandItem
-                                key={customer.id}
-                                value={customer.name}
-                                onSelect={() => {
-                                  setCustomerId(customer.id)
-                                  setCustomerSelectOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    customerId === customer.id ? 'opacity-100' : 'opacity-0'
-                                  )}
-                                />
-                                {customer.icon && <span className="mr-2">{customer.icon}</span>}
-                                {customer.name}
-                              </CommandItem>
-                            ))}
-                          </ScrollArea>
-                        </CommandGroup>
-                      </Command>
+                      {isCreatingCustomer ? (
+                        <div className="p-3 space-y-3">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <UserPlus className="h-4 w-4" />
+                            New Customer
+                          </div>
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Customer name"
+                              value={newCustomerName}
+                              onChange={(e) => setNewCustomerName(e.target.value)}
+                              autoFocus
+                            />
+                            <Input
+                              placeholder="Emoji (optional)"
+                              value={newCustomerIcon}
+                              onChange={(e) => setNewCustomerIcon(e.target.value)}
+                              maxLength={10}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={resetCustomerForm}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="flex-1"
+                              onClick={handleCreateCustomer}
+                              disabled={createCustomerMutation.isPending}
+                              data-testid="create-customer-inline"
+                            >
+                              {createCustomerMutation.isPending ? 'Creating...' : 'Create'}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Command>
+                          <CommandInput placeholder="Search customers..." />
+                          <CommandEmpty>No customer found.</CommandEmpty>
+                          <CommandGroup>
+                            <ScrollArea className="h-64">
+                              {customers.map((customer) => (
+                                <CommandItem
+                                  key={customer.id}
+                                  value={customer.name}
+                                  onSelect={() => {
+                                    setCustomerId(customer.id)
+                                    setCustomerSelectOpen(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      'mr-2 h-4 w-4',
+                                      customerId === customer.id ? 'opacity-100' : 'opacity-0'
+                                    )}
+                                  />
+                                  {customer.icon && <span className="mr-2">{customer.icon}</span>}
+                                  {customer.name}
+                                </CommandItem>
+                              ))}
+                            </ScrollArea>
+                          </CommandGroup>
+                          {(isAdmin || isProjectManager) && (
+                            <>
+                              <CommandSeparator />
+                              <CommandGroup>
+                                <CommandItem
+                                  onSelect={() => setIsCreatingCustomer(true)}
+                                  className="text-primary"
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  New Customer
+                                </CommandItem>
+                              </CommandGroup>
+                            </>
+                          )}
+                        </Command>
+                      )}
                     </PopoverContent>
                   </Popover>
-                  {customers.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      No customers available. Create one first in the Customers page.
-                    </p>
-                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="name">Project Name</Label>
