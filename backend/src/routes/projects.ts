@@ -3,6 +3,8 @@ import { db, projects, projectAssignments, dayAssignments, milestones } from '..
 import { projectSchema } from '../utils/validation.js'
 import { authenticate, requireAdminOrProjectManager, AuthRequest } from '../middleware/auth.js'
 import { eq } from 'drizzle-orm'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const router = Router()
 
@@ -32,11 +34,8 @@ router.get('/', authenticate, async (_req, res) => {
 // MUST be before /:id route to avoid matching "cascade-info" as an ID
 router.get('/:id/cascade-info', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const projectId = parseInt(req.params.id)
-
-    if (isNaN(projectId)) {
-      return res.status(400).json({ error: 'Invalid project ID' })
-    }
+    const projectId = parseIdParam(req.params.id, res, 'project ID')
+    if (projectId === null) return
 
     // Get project assignments
     const assignments = await db.query.projectAssignments.findMany({
@@ -71,7 +70,8 @@ router.get('/:id/cascade-info', authenticate, requireAdminOrProjectManager, asyn
 // Get project by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const projectId = parseInt(req.params.id)
+    const projectId = parseIdParam(req.params.id, res, 'project ID')
+    if (projectId === null) return
     const project = await db.query.projects.findFirst({
       where: (projects, { eq }) => eq(projects.id, projectId),
       with: {
@@ -113,15 +113,15 @@ router.post('/', authenticate, requireAdminOrProjectManager, async (req: AuthReq
     }).returning()
     res.status(201).json(project)
   } catch (error) {
-    console.error('Create project error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create project error', 400, 'Invalid request')
   }
 })
 
 // Update project (admin or project manager for own projects)
 router.put('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const projectId = parseInt(req.params.id)
+    const projectId = parseIdParam(req.params.id, res, 'project ID')
+    if (projectId === null) return
     const data = projectSchema.parse(req.body)
 
     // Check ownership for project managers
@@ -146,15 +146,15 @@ router.put('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthR
 
     res.json(updated)
   } catch (error) {
-    console.error('Update project error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update project error', 400, 'Invalid request')
   }
 })
 
 // Delete project (admin or project manager for own projects)
 router.delete('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const projectId = parseInt(req.params.id)
+    const projectId = parseIdParam(req.params.id, res, 'project ID')
+    if (projectId === null) return
 
     // Check ownership for project managers
     if (req.user?.role === 'project_manager') {

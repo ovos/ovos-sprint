@@ -3,6 +3,8 @@ import { db, teams, teamMembers, teamTeamMembers } from '../db/index.js'
 import { teamSchema } from '../utils/validation.js'
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js'
 import { eq, and, inArray } from 'drizzle-orm'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const router = Router()
 
@@ -34,11 +36,8 @@ router.get('/members/relationships', authenticate, async (_req, res) => {
 // MUST be before /:id route to avoid matching "cascade-info" as an ID
 router.get('/:id/cascade-info', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
-
-    if (isNaN(teamId)) {
-      return res.status(400).json({ error: 'Invalid team ID' })
-    }
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
 
     // Get team member links
     const teamLinks = await db.query.teamTeamMembers.findMany({
@@ -57,7 +56,8 @@ router.get('/:id/cascade-info', authenticate, requireAdmin, async (req: AuthRequ
 // Get team by ID with members
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const teamId = parseInt(req.params.id)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
     const team = await db.query.teams.findFirst({
       where: (teams, { eq }) => eq(teams.id, teamId),
     })
@@ -88,15 +88,15 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res) => {
     const [team] = await db.insert(teams).values(data).returning()
     res.status(201).json(team)
   } catch (error) {
-    console.error('Create team error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create team error', 400, 'Invalid request')
   }
 })
 
 // Update team (admin only)
 router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
     const data = teamSchema.parse(req.body)
 
     const [updated] = await db
@@ -111,15 +111,15 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => 
 
     res.json(updated)
   } catch (error) {
-    console.error('Update team error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update team error', 400, 'Invalid request')
   }
 })
 
 // Delete team (admin only)
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
     await db.delete(teams).where(eq(teams.id, teamId))
     res.status(204).send()
   } catch (error) {
@@ -131,7 +131,8 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) 
 // Batch add multiple members to a team (admin only) - MUST come before /:id/members/:memberId
 router.post('/:id/members/batch', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
     const data = req.body as { memberIds: number[] }
 
     if (!Array.isArray(data.memberIds)) {
@@ -188,7 +189,8 @@ router.post('/:id/members/batch', authenticate, requireAdmin, async (req: AuthRe
 // Batch remove multiple members from a team (admin only) - MUST come before /:id/members/:memberId
 router.delete('/:id/members/batch', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
     const data = req.body as { memberIds: number[] }
 
     if (!Array.isArray(data.memberIds)) {
@@ -213,8 +215,10 @@ router.delete('/:id/members/batch', authenticate, requireAdmin, async (req: Auth
 // Add member to team (admin only)
 router.post('/:id/members/:memberId', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
-    const memberId = parseInt(req.params.memberId)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
+    const memberId = parseIdParam(req.params.memberId, res, 'member ID')
+    if (memberId === null) return
 
     await db.insert(teamTeamMembers).values({
       teamId,
@@ -223,16 +227,17 @@ router.post('/:id/members/:memberId', authenticate, requireAdmin, async (req: Au
 
     res.status(201).json({ message: 'Member added to team' })
   } catch (error) {
-    console.error('Add member to team error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Add member to team error', 400, 'Invalid request')
   }
 })
 
 // Remove member from team (admin only)
 router.delete('/:id/members/:memberId', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const teamId = parseInt(req.params.id)
-    const memberId = parseInt(req.params.memberId)
+    const teamId = parseIdParam(req.params.id, res, 'team ID')
+    if (teamId === null) return
+    const memberId = parseIdParam(req.params.memberId, res, 'member ID')
+    if (memberId === null) return
 
     await db
       .delete(teamTeamMembers)

@@ -5,6 +5,8 @@ import { authenticate, requireAdminOrProjectManager, AuthRequest } from '../midd
 import { eq, and, gte, lte, inArray } from 'drizzle-orm'
 import { handleGroupMergeOnDayAdd, handleGroupSplitOnDayDelete, cleanupOrphanedGroups, handleBatchGroupMerge } from '../utils/groupMerge.js'
 import { canModifyProject } from '../utils/authorization.js'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const router = Router()
 
@@ -54,7 +56,8 @@ router.get('/projects', authenticate, async (_req, res) => {
 // Get project assignments for a specific project
 router.get('/projects/:projectId', authenticate, async (req, res) => {
   try {
-    const projectId = parseInt(req.params.projectId)
+    const projectId = parseIdParam(req.params.projectId, res, 'project ID')
+    if (projectId === null) return
     const assignments = await db
       .select()
       .from(projectAssignments)
@@ -88,7 +91,8 @@ router.get('/projects/:projectId', authenticate, async (req, res) => {
 // Get project assignments for a specific team member
 router.get('/members/:memberId', authenticate, async (req, res) => {
   try {
-    const memberId = parseInt(req.params.memberId)
+    const memberId = parseIdParam(req.params.memberId, res, 'member ID')
+    if (memberId === null) return
     const assignments = await db
       .select()
       .from(projectAssignments)
@@ -124,7 +128,8 @@ router.get('/members/:memberId', authenticate, async (req, res) => {
 // not the full range if there are gaps (deleted days)
 router.get('/projects/:id/date-range', authenticate, async (req, res) => {
   try {
-    const projectAssignmentId = parseInt(req.params.id)
+    const projectAssignmentId = parseIdParam(req.params.id, res, 'project assignment ID')
+    if (projectAssignmentId === null) return
     const dateParam = req.query.date as string | undefined
 
     const days = await db.query.dayAssignments.findMany({
@@ -297,15 +302,15 @@ router.post('/projects', authenticate, requireAdminOrProjectManager, async (req:
     const [assignment] = await db.insert(projectAssignments).values(data).returning()
     res.status(201).json(assignment)
   } catch (error) {
-    console.error('Create assignment error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create project assignment error', 400, 'Invalid request')
   }
 })
 
 // Delete project assignment (admin or project manager for their own projects)
 router.delete('/projects/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const assignmentId = parseInt(req.params.id)
+    const assignmentId = parseIdParam(req.params.id, res, 'assignment ID')
+    if (assignmentId === null) return
 
     // Get the assignment to check project ownership
     const assignment = await db.query.projectAssignments.findFirst({
@@ -418,15 +423,15 @@ router.post('/days', authenticate, requireAdminOrProjectManager, async (req: Aut
       groupMerge: mergeResult.merged ? mergeResult : undefined
     })
   } catch (error) {
-    console.error('Create day assignment error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create day assignment error', 400, 'Invalid request')
   }
 })
 
 // Update day assignment (admin or project manager for their own projects)
 router.put('/days/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseIdParam(req.params.id, res, 'day assignment ID')
+    if (id === null) return
     const { comment } = req.body
 
     // Get the day assignment to check ownership
@@ -452,8 +457,7 @@ router.put('/days/:id', authenticate, requireAdminOrProjectManager, async (req: 
 
     res.json(updated)
   } catch (error) {
-    console.error('Update day assignment error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update day assignment error', 400, 'Invalid request')
   }
 })
 
@@ -512,7 +516,8 @@ router.delete('/days/batch', authenticate, requireAdminOrProjectManager, async (
 // Delete day assignment (admin or project manager for their own projects)
 router.delete('/days/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseIdParam(req.params.id, res, 'day assignment ID')
+    if (id === null) return
 
     // Get the day assignment first so we know its date and projectAssignmentId
     const dayAssignment = await db.query.dayAssignments.findFirst({
@@ -670,15 +675,15 @@ router.post('/groups', authenticate, requireAdminOrProjectManager, async (req: A
     const [group] = await db.insert(assignmentGroups).values(data).returning()
     res.status(201).json(group)
   } catch (error) {
-    console.error('Create assignment group error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create assignment group error', 400, 'Invalid request')
   }
 })
 
 // Update assignment group (admin or project manager for their own projects)
 router.put('/groups/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseIdParam(req.params.id, res, 'assignment group ID')
+    if (id === null) return
     const data = updateAssignmentGroupSchema.parse(req.body)
 
     // Get the group to check ownership
@@ -708,15 +713,15 @@ router.put('/groups/:id', authenticate, requireAdminOrProjectManager, async (req
 
     res.json(updated)
   } catch (error) {
-    console.error('Update assignment group error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update assignment group error', 400, 'Invalid request')
   }
 })
 
 // Delete assignment group (admin or project manager for their own projects)
 router.delete('/groups/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = parseIdParam(req.params.id, res, 'assignment group ID')
+    if (id === null) return
 
     // Get the group to check ownership
     const group = await db.query.assignmentGroups.findFirst({
@@ -744,7 +749,8 @@ router.delete('/groups/:id', authenticate, requireAdminOrProjectManager, async (
 // Move project assignment to new date range with merge support
 router.post('/projects/:id/move', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const projectAssignmentId = parseInt(req.params.id)
+    const projectAssignmentId = parseIdParam(req.params.id, res, 'project assignment ID')
+    if (projectAssignmentId === null) return
     const { oldStartDate: providedOldStartDate, oldEndDate: providedOldEndDate, newStartDate, newEndDate } = req.body
 
     // Validate dates

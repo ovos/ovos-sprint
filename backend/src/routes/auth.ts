@@ -9,11 +9,12 @@ import { eq } from 'drizzle-orm'
 import { emailService } from '../services/email/emailService.js'
 import {
   generatePasswordResetToken,
-  verifyPasswordResetToken,
+  hashPasswordResetToken,
   getPasswordResetExpiry
 } from '../utils/passwordReset.js'
 import { rateLimiter } from '../middleware/rateLimiter.js'
 import { verifyGoogleToken } from '../utils/googleAuth.js'
+import { handleRouteError } from '../utils/errorResponse.js'
 
 const router = Router()
 
@@ -55,8 +56,7 @@ router.post('/login', rateLimiter(10, 15 * 60 * 1000), async (req, res) => {
       },
     })
   } catch (error) {
-    console.error('Login error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Login error', 400, 'Invalid request')
   }
 })
 
@@ -132,8 +132,7 @@ router.post('/google', async (req, res) => {
       },
     })
   } catch (error) {
-    console.error('Google auth error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Google auth error', 400, 'Invalid request')
   }
 })
 
@@ -210,8 +209,7 @@ router.post('/register', rateLimiter(10, 15 * 60 * 1000), async (req, res) => {
       },
     })
   } catch (error) {
-    console.error('Register error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Register error', 400, 'Invalid request')
   }
 })
 
@@ -255,18 +253,19 @@ router.post('/forgot-password', rateLimiter(3, 15 * 60 * 1000), async (req, res)
       expiresInHours: 1,
     })
 
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🔐 Password reset email sent to:', email)
-    console.log('🔗 Reset link:', resetLink)
-    console.log('⏰ Expires at:', expiresAt)
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.log('🔐 Password reset email sent to:', email)
+      console.log('🔗 Reset link:', resetLink)
+      console.log('⏰ Expires at:', expiresAt)
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    }
 
     res.json({
       message: 'If that email exists, a password reset link has been sent'
     })
   } catch (error) {
-    console.error('Forgot password error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Forgot password error', 400, 'Invalid request')
   }
 })
 
@@ -275,20 +274,13 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = resetPasswordSchema.parse(req.body)
 
-    // Find all non-expired tokens
+    // Hash the token and look it up directly (O(1) instead of O(n) bcrypt scan)
     const now = new Date().toISOString()
-    const allResets = await db.query.passwordResets.findMany({
-      where: (passwordResets, { gt }) => gt(passwordResets.expiresAt, now),
+    const tokenHash = hashPasswordResetToken(token)
+    const matchingReset = await db.query.passwordResets.findFirst({
+      where: (passwordResets, { and, eq, gt }) =>
+        and(eq(passwordResets.tokenHash, tokenHash), gt(passwordResets.expiresAt, now)),
     })
-
-    // Find matching token by verifying hash
-    let matchingReset = null
-    for (const reset of allResets) {
-      if (verifyPasswordResetToken(token, reset.tokenHash)) {
-        matchingReset = reset
-        break
-      }
-    }
 
     if (!matchingReset) {
       return res.status(400).json({
@@ -320,8 +312,7 @@ router.post('/reset-password', async (req, res) => {
       message: 'Password reset successful. You can now log in with your new password.'
     })
   } catch (error) {
-    console.error('Reset password error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Reset password error', 400, 'Invalid request')
   }
 })
 
@@ -379,8 +370,7 @@ router.post('/invite', authenticate, requireAdmin, async (_req: AuthRequest, res
       invitationLink,
     })
   } catch (error) {
-    console.error('Invite error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Invite error', 400, 'Invalid request')
   }
 })
 

@@ -3,6 +3,8 @@ import { db, dayOffs, dayAssignments, projectAssignments, teamMembers } from '..
 import { authenticate, AuthRequest } from '../middleware/auth.js'
 import { eq, and, gte, lte, asc } from 'drizzle-orm'
 import { dayOffSchema } from '../utils/validation.js'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const router = Router()
 
@@ -75,15 +77,15 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     const [dayOff] = await db.insert(dayOffs).values(data).returning()
     res.status(201).json(dayOff)
   } catch (error) {
-    console.error('Create day-off error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create day-off error', 400, 'Invalid request')
   }
 })
 
 // Delete day-off (admin or own member)
 router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
   try {
-    const dayOffId = parseInt(req.params.id)
+    const dayOffId = parseIdParam(req.params.id, res, 'day-off ID')
+    if (dayOffId === null) return
 
     // Non-admins can only delete their own day-offs
     if (req.user!.role !== 'admin') {

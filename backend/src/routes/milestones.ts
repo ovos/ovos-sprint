@@ -4,6 +4,8 @@ import { authenticate, requireAdminOrProjectManager, AuthRequest } from '../midd
 import { eq, and, gte, lte, asc } from 'drizzle-orm'
 import { milestoneSchema } from '../utils/validation.js'
 import { canModifyProject } from '../utils/authorization.js'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const router = Router()
 
@@ -41,7 +43,8 @@ router.get('/', authenticate, async (req, res) => {
 // Get milestone by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const milestoneId = parseInt(req.params.id)
+    const milestoneId = parseIdParam(req.params.id, res, 'milestone ID')
+    if (milestoneId === null) return
     const milestone = await db.query.milestones.findFirst({
       where: (milestones, { eq }) => eq(milestones.id, milestoneId),
     })
@@ -70,15 +73,15 @@ router.post('/', authenticate, requireAdminOrProjectManager, async (req: AuthReq
     const [milestone] = await db.insert(milestones).values(data).returning()
     res.status(201).json(milestone)
   } catch (error) {
-    console.error('Create milestone error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create milestone error', 400, 'Invalid request')
   }
 })
 
 // Update milestone (admin or project manager for their own projects)
 router.put('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const milestoneId = parseInt(req.params.id)
+    const milestoneId = parseIdParam(req.params.id, res, 'milestone ID')
+    if (milestoneId === null) return
     const data = milestoneSchema.partial().parse(req.body)
 
     // Get the milestone to check project ownership
@@ -103,15 +106,15 @@ router.put('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthR
 
     res.json(updated)
   } catch (error) {
-    console.error('Update milestone error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update milestone error', 400, 'Invalid request')
   }
 })
 
 // Delete milestone (admin or project manager for their own projects)
 router.delete('/:id', authenticate, requireAdminOrProjectManager, async (req: AuthRequest, res) => {
   try {
-    const milestoneId = parseInt(req.params.id)
+    const milestoneId = parseIdParam(req.params.id, res, 'milestone ID')
+    if (milestoneId === null) return
 
     // Get the milestone to check project ownership
     const existingMilestone = await db.query.milestones.findFirst({

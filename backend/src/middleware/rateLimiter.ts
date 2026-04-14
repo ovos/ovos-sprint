@@ -24,7 +24,8 @@ setInterval(() => {
  */
 export function rateLimiter(maxRequests: number, windowMs: number) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const identifier = req.ip || req.socket.remoteAddress || 'unknown'
+    const ip = req.ip || req.socket.remoteAddress || 'unknown'
+    const identifier = `${req.path}:${ip}`
     const now = Date.now()
 
     const entry = rateLimitStore.get(identifier)

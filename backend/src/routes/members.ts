@@ -10,6 +10,8 @@ import { teamMemberSchema } from '../utils/validation.js'
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js'
 import { eq, and, isNull } from 'drizzle-orm'
 import { emailService } from '../services/email/emailService.js'
+import { handleRouteError } from '../utils/errorResponse.js'
+import { parseIdParam } from '../utils/parseParams.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -92,7 +94,8 @@ router.get('/', authenticate, async (_req, res) => {
 // MUST be before /:id route to avoid matching "cascade-info" as an ID
 router.get('/:id/cascade-info', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
 
     const assignments = await db.query.projectAssignments.findMany({
       where: eq(projectAssignments.teamMemberId, memberId),
@@ -129,7 +132,8 @@ router.get('/:id/cascade-info', authenticate, requireAdmin, async (req: AuthRequ
 // Get team member by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
     const member = await db.query.teamMembers.findFirst({
       where: (teamMembers, { eq }) => eq(teamMembers.id, memberId),
     })
@@ -152,15 +156,15 @@ router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res) => {
     const [member] = await db.insert(teamMembers).values(data).returning()
     res.status(201).json(member)
   } catch (error) {
-    console.error('Create member error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Create member error', 400, 'Invalid request')
   }
 })
 
 // Update team member (admin only)
 router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
     const data = teamMemberSchema.parse(req.body)
 
     const [updated] = await db
@@ -175,15 +179,15 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => 
 
     res.json(updated)
   } catch (error) {
-    console.error('Update member error:', error)
-    res.status(400).json({ error: 'Invalid request' })
+    handleRouteError(res, error, 'Update member error', 400, 'Invalid request')
   }
 })
 
 // Delete team member (admin only)
 router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
     await db.delete(teamMembers).where(eq(teamMembers.id, memberId))
     res.status(204).send()
   } catch (error) {
@@ -195,7 +199,8 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) 
 // Upload avatar (admin only)
 router.post('/:id/avatar', authenticate, requireAdmin, upload.single('avatar'), async (req: AuthRequest, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
@@ -240,7 +245,8 @@ router.post('/:id/avatar', authenticate, requireAdmin, upload.single('avatar'), 
 // Invite member as user (admin only)
 router.post('/:id/invite', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const memberId = parseInt(req.params.id)
+    const memberId = parseIdParam(req.params.id, res, 'member ID')
+    if (memberId === null) return
 
     // Get member details
     const member = await db.query.teamMembers.findFirst({

@@ -30,11 +30,11 @@ none
 
 ### Security: Stop logging password reset tokens in production
 
-- [ ] `auth.ts:258-262` unconditionally logs the full reset link (including the secret token) to stdout. Guard with `NODE_ENV !== 'production'` or remove the token from the log message entirely.
+- [x] `auth.ts:258-262` unconditionally logs the full reset link (including the secret token) to stdout. Guard with `NODE_ENV !== 'production'` or remove the token from the log message entirely.
 
 ### Security: Fix password reset token lookup scanning all tokens with bcrypt
 
-- [ ] `auth.ts:280-291` fetches all non-expired password reset rows and loops `bcrypt.compareSync` against each. With many pending resets this is O(n) bcrypt operations (~100ms each). Use SHA-256 for token storage/lookup since the token already has 256 bits of entropy.
+- [x] `auth.ts:280-291` fetches all non-expired password reset rows and loops `bcrypt.compareSync` against each. With many pending resets this is O(n) bcrypt operations (~100ms each). Use SHA-256 for token storage/lookup since the token already has 256 bits of entropy.
 
 ### Resilience: Add error boundary around route tree
 
@@ -64,7 +64,7 @@ none
 
 ### DX: Return Zod validation details in error responses
 
-- [ ] Catch blocks across all routes return generic `{ error: 'Invalid request' }` when Zod parsing fails. Check `instanceof z.ZodError` and return `{ error: 'Validation failed', details: error.errors }` so API consumers get actionable feedback.
+- [x] Catch blocks across all routes return generic `{ error: 'Invalid request' }` when Zod parsing fails. Check `instanceof z.ZodError` and return `{ error: 'Validation failed', details: error.errors }` so API consumers get actionable feedback.
 
 ### DX: Extract duplicated `canModifyProject` to shared utility
 
@@ -76,7 +76,7 @@ none
 
 ### DX: Consistent `parseInt` validation on route params
 
-- [ ] Several routes in `teams.ts`, `customers.ts`, `members.ts` call `parseInt(req.params.id)` without checking for `NaN`, returning misleading 404s instead of 400s. Extract a `parseIdParam` utility and use it consistently.
+- [x] Several routes in `teams.ts`, `customers.ts`, `members.ts` call `parseInt(req.params.id)` without checking for `NaN`, returning misleading 404s instead of 400s. Extract a `parseIdParam` utility and use it consistently.
 
 ### Resilience: Add WebSocket error handling and reconnection
 
@@ -84,7 +84,7 @@ none
 
 ### Security: Scope rate limiter keys by route
 
-- [ ] `rateLimiter.ts:27` uses only the client IP as the key. Requests to different rate-limited routes share the same counter. Include the route path in the key to prevent cross-route lockout.
+- [x] `rateLimiter.ts:27` uses only the client IP as the key. Requests to different rate-limited routes share the same counter. Include the route path in the key to prevent cross-route lockout.
 
 ### Accessibility: Add `aria-label` to icon-only buttons across CRUD pages
 
@@ -92,7 +92,7 @@ none
 
 ### Security: Set explicit `express.json()` body size limit
 
-- [ ] `index.ts:136` calls `express.json()` with no `limit` option. Set an explicit limit like `{ limit: '1mb' }` to prevent memory exhaustion from oversized payloads.
+- [x] `index.ts:136` calls `express.json()` with no `limit` option. Set an explicit limit like `{ limit: '1mb' }` to prevent memory exhaustion from oversized payloads.
 
 ### Consistency: Fix WebSocket CORS to match HTTP CORS
 
