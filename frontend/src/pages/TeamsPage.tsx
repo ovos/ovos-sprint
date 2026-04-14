@@ -286,12 +286,13 @@ export default function TeamsPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setManagingTeam(team)}>
+                    <Button variant="ghost" size="sm" aria-label="Manage members" onClick={() => setManagingTeam(team)}>
                       <Users className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Edit team"
                       onClick={() => {
                         setEditingTeam(team)
                         setTeamName(team.name)
@@ -302,6 +303,7 @@ export default function TeamsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Delete team"
                       onClick={() => handleDeleteClick(team)}
                       className="text-destructive hover:text-destructive"
                     >

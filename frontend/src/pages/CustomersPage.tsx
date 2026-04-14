@@ -95,12 +95,13 @@ function CustomerTable({
               <TableCell className="text-right">
                 {canEdit(customer) ? (
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(customer)}>
+                    <Button variant="ghost" size="sm" aria-label="Edit customer" onClick={() => onEdit(customer)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Delete customer"
                       onClick={() => onDelete(customer)}
                       className="text-destructive hover:text-destructive"
                     >

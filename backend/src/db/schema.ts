@@ -236,6 +236,25 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
   }),
 }))
 
+export const projectAssignmentsRelations = relations(projectAssignments, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [projectAssignments.projectId],
+    references: [projects.id],
+  }),
+  teamMember: one(teamMembers, {
+    fields: [projectAssignments.teamMemberId],
+    references: [teamMembers.id],
+  }),
+  dayAssignments: many(dayAssignments),
+}))
+
+export const dayAssignmentsRelations = relations(dayAssignments, ({ one }) => ({
+  projectAssignment: one(projectAssignments, {
+    fields: [dayAssignments.projectAssignmentId],
+    references: [projectAssignments.id],
+  }),
+}))
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   teamMember: one(teamMembers, {
     fields: [users.id],

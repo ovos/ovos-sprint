@@ -421,6 +421,7 @@ export default function MembersPage() {
                             }}
                             disabled={inviteMutation.isPending}
                             title="Invite User"
+                            aria-label="Invite user"
                           >
                             <MailPlus className="h-4 w-4" />
                           </Button>
@@ -430,6 +431,7 @@ export default function MembersPage() {
                           size="sm"
                           onClick={() => setUploadingAvatarFor(member)}
                           title="Upload Avatar"
+                          aria-label="Upload avatar"
                         >
                           <Camera className="h-4 w-4" />
                         </Button>
@@ -444,6 +446,7 @@ export default function MembersPage() {
                             setWorkSchedule(JSON.parse(member.workSchedule))
                           }}
                           title="Edit"
+                          aria-label="Edit member"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -452,6 +455,7 @@ export default function MembersPage() {
                           size="sm"
                           onClick={() => handleManageTeams(member)}
                           title="Manage Teams"
+                          aria-label="Manage teams"
                         >
                           <Users className="h-4 w-4" />
                         </Button>
@@ -481,6 +485,7 @@ export default function MembersPage() {
                           }}
                           className="text-destructive hover:text-destructive"
                           title="Delete"
+                          aria-label="Delete member"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -172,15 +172,16 @@ function ProjectTable({
               <TableCell className="text-right">
                 {canEdit(project) ? (
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onAssign(project)}>
+                    <Button variant="ghost" size="sm" aria-label="Assign members" onClick={() => onAssign(project)}>
                       <Users className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(project)}>
+                    <Button variant="ghost" size="sm" aria-label="Edit project" onClick={() => onEdit(project)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label="Delete project"
                       onClick={() => onDelete(project)}
                       className="text-destructive hover:text-destructive"
                     >

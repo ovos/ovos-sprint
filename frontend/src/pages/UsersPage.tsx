@@ -278,6 +278,7 @@ export default function UsersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label="Delete user"
                             onClick={() => handleDeleteUser(user)}
                             disabled={deleteMutation.isPending}
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"

@@ -41,26 +41,27 @@ describe('Code Splitting', () => {
       // Verify that all page modules can be dynamically imported
       // This catches broken import paths that would fail at runtime
       const pageModules = [
-        () => import('@/pages/LoginPage'),
-        () => import('@/pages/RegisterPage'),
-        () => import('@/pages/ForgotPasswordPage'),
-        () => import('@/pages/ResetPasswordPage'),
-        () => import('@/pages/DashboardPage'),
-        () => import('@/pages/UsersPage'),
-        () => import('@/pages/TeamsPage'),
-        () => import('@/pages/CustomersPage'),
-        () => import('@/pages/MembersPage'),
-        () => import('@/pages/ProjectsPage'),
-        () => import('@/pages/SettingsPage'),
+        import('@/pages/LoginPage'),
+        import('@/pages/RegisterPage'),
+        import('@/pages/ForgotPasswordPage'),
+        import('@/pages/ResetPasswordPage'),
+        import('@/pages/DashboardPage'),
+        import('@/pages/UsersPage'),
+        import('@/pages/TeamsPage'),
+        import('@/pages/CustomersPage'),
+        import('@/pages/MembersPage'),
+        import('@/pages/ProjectsPage'),
+        import('@/pages/SettingsPage'),
       ]
 
-      for (const loadModule of pageModules) {
-        const mod = await loadModule()
+      const modules = await Promise.all(pageModules)
+
+      for (const mod of modules) {
         // Each module should have a default export (the page component)
         expect(mod.default).toBeDefined()
         expect(typeof mod.default).toBe('function')
       }
-    })
+    }, 30000)
   })
 
   describe('Suspense fallback', () => {

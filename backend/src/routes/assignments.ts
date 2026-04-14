@@ -21,32 +21,15 @@ async function getProjectIdFromAssignment(projectAssignmentId: number): Promise<
 // Get all project assignments
 router.get('/projects', authenticate, async (_req, res) => {
   try {
-    const assignments = await db.select().from(projectAssignments)
+    const assignments = await db.query.projectAssignments.findMany({
+      with: {
+        project: true,
+        teamMember: true,
+        dayAssignments: true,
+      },
+    })
 
-    const assignmentsWithDetails = await Promise.all(
-      assignments.map(async (assignment) => {
-        const project = await db.query.projects.findFirst({
-          where: (projects, { eq }) => eq(projects.id, assignment.projectId),
-        })
-
-        const member = await db.query.teamMembers.findFirst({
-          where: (teamMembers, { eq }) => eq(teamMembers.id, assignment.teamMemberId),
-        })
-
-        const days = await db.query.dayAssignments.findMany({
-          where: (dayAssignments, { eq }) => eq(dayAssignments.projectAssignmentId, assignment.id),
-        })
-
-        return {
-          ...assignment,
-          project,
-          teamMember: member,
-          dayAssignments: days,
-        }
-      })
-    )
-
-    res.json(assignmentsWithDetails)
+    res.json(assignments)
   } catch (error) {
     console.error('Get project assignments error:', error)
     res.status(500).json({ error: 'Server error' })
@@ -58,30 +41,16 @@ router.get('/projects/:projectId', authenticate, async (req, res) => {
   try {
     const projectId = parseIdParam(req.params.projectId, res, 'project ID')
     if (projectId === null) return
-    const assignments = await db
-      .select()
-      .from(projectAssignments)
-      .where(eq(projectAssignments.projectId, projectId))
 
-    const assignmentsWithDetails = await Promise.all(
-      assignments.map(async (assignment) => {
-        const member = await db.query.teamMembers.findFirst({
-          where: (teamMembers, { eq }) => eq(teamMembers.id, assignment.teamMemberId),
-        })
+    const assignments = await db.query.projectAssignments.findMany({
+      where: (pa, { eq }) => eq(pa.projectId, projectId),
+      with: {
+        teamMember: true,
+        dayAssignments: true,
+      },
+    })
 
-        const days = await db.query.dayAssignments.findMany({
-          where: (dayAssignments, { eq }) => eq(dayAssignments.projectAssignmentId, assignment.id),
-        })
-
-        return {
-          ...assignment,
-          teamMember: member,
-          dayAssignments: days,
-        }
-      })
-    )
-
-    res.json(assignmentsWithDetails)
+    res.json(assignments)
   } catch (error) {
     console.error('Get project assignments error:', error)
     res.status(500).json({ error: 'Server error' })
@@ -93,30 +62,16 @@ router.get('/members/:memberId', authenticate, async (req, res) => {
   try {
     const memberId = parseIdParam(req.params.memberId, res, 'member ID')
     if (memberId === null) return
-    const assignments = await db
-      .select()
-      .from(projectAssignments)
-      .where(eq(projectAssignments.teamMemberId, memberId))
 
-    const assignmentsWithDetails = await Promise.all(
-      assignments.map(async (assignment) => {
-        const project = await db.query.projects.findFirst({
-          where: (projects, { eq }) => eq(projects.id, assignment.projectId),
-        })
+    const assignments = await db.query.projectAssignments.findMany({
+      where: (pa, { eq }) => eq(pa.teamMemberId, memberId),
+      with: {
+        project: true,
+        dayAssignments: true,
+      },
+    })
 
-        const days = await db.query.dayAssignments.findMany({
-          where: (dayAssignments, { eq }) => eq(dayAssignments.projectAssignmentId, assignment.id),
-        })
-
-        return {
-          ...assignment,
-          project,
-          dayAssignments: days,
-        }
-      })
-    )
-
-    res.json(assignmentsWithDetails)
+    res.json(assignments)
   } catch (error) {
     console.error('Get member assignments error:', error)
     res.status(500).json({ error: 'Server error' })
@@ -339,47 +294,30 @@ router.get('/days', authenticate, async (req, res) => {
   try {
     const { startDate, endDate } = req.query
 
-    let days
-    if (startDate && endDate) {
-      days = await db
-        .select()
-        .from(dayAssignments)
-        .where(
-          and(
-            gte(dayAssignments.date, startDate as string),
-            lte(dayAssignments.date, endDate as string)
-          )
-        )
-    } else {
-      days = await db.select().from(dayAssignments)
-    }
+    const days = await db.query.dayAssignments.findMany({
+      where: startDate && endDate
+        ? (da, { and, gte, lte }) => and(gte(da.date, startDate as string), lte(da.date, endDate as string))
+        : undefined,
+      with: {
+        projectAssignment: {
+          with: {
+            project: true,
+            teamMember: true,
+          },
+        },
+      },
+    })
 
-    const daysWithDetails = await Promise.all(
-      days.map(async (day) => {
-        const assignment = await db.query.projectAssignments.findFirst({
-          where: (projectAssignments, { eq }) => eq(projectAssignments.id, day.projectAssignmentId),
-        })
+    // Flatten nested relations to match the existing API shape
+    const result = days
+      .filter(day => day.projectAssignment !== null)
+      .map(day => ({
+        ...day,
+        project: day.projectAssignment?.project,
+        teamMember: day.projectAssignment?.teamMember,
+      }))
 
-        if (!assignment) return null
-
-        const project = await db.query.projects.findFirst({
-          where: (projects, { eq }) => eq(projects.id, assignment.projectId),
-        })
-
-        const member = await db.query.teamMembers.findFirst({
-          where: (teamMembers, { eq }) => eq(teamMembers.id, assignment.teamMemberId),
-        })
-
-        return {
-          ...day,
-          projectAssignment: assignment,
-          project,
-          teamMember: member,
-        }
-      })
-    )
-
-    res.json(daysWithDetails.filter(Boolean))
+    res.json(result)
   } catch (error) {
     console.error('Get day assignments error:', error)
     res.status(500).json({ error: 'Server error' })
