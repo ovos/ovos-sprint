@@ -158,9 +158,9 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     cleanup()
   })
 
-  // ── Feature: "+ New Customer" button visibility ────────────────────────
+  // ── Feature: "New Customer" button visibility ────────────────────────
 
-  it('shows "+ New Customer" option in the customer combobox dropdown for admin users', async () => {
+  it('shows "New Customer" option in the customer combobox dropdown for admin users', async () => {
     render(await import('../ProjectsPage').then((m) => <m.default />))
 
     await waitFor(() => {
@@ -171,11 +171,11 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
   })
 
-  it('shows "+ New Customer" option for project_manager users', async () => {
+  it('shows "New Customer" option for project_manager users', async () => {
     mockUser = {
       id: 2,
       email: 'pm@test.com',
@@ -193,11 +193,11 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
   })
 
-  it('does NOT show "+ New Customer" option for regular users', async () => {
+  it('does NOT show "New Customer" option for regular users', async () => {
     mockUser = {
       id: 3,
       email: 'user@test.com',
@@ -215,13 +215,13 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.queryByText(/\+ New Customer/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/New Customer/i)).not.toBeInTheDocument()
     })
   })
 
   // ── Feature: Inline creation form ──────────────────────────────────────
 
-  it('clicking "+ New Customer" switches to inline creation form with name and icon fields', async () => {
+  it('clicking "New Customer" switches to inline creation form with name and icon fields', async () => {
     render(await import('../ProjectsPage').then((m) => <m.default />))
 
     await waitFor(() => {
@@ -232,10 +232,10 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     // Should show inline form fields
     await waitFor(() => {
@@ -268,11 +268,11 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
     // Enter create mode
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/customer name/i)).toBeInTheDocument()
@@ -303,11 +303,11 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
     // Enter create mode
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/customer name/i)).toBeInTheDocument()
@@ -340,10 +340,10 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/customer name/i)).toBeInTheDocument()
@@ -374,10 +374,10 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/customer name/i)).toBeInTheDocument()
@@ -395,7 +395,7 @@ describe('ProjectsPage – Inline Customer Creation', () => {
 
   // ── Feature: Empty state shows inline creation option ──────────────────
 
-  it('shows "+ New Customer" in the empty customers state instead of "go to Customers page" message', async () => {
+  it('shows "New Customer" in the empty customers state instead of "go to Customers page" message', async () => {
     // Return empty customers list
     mockGet.mockImplementation((url: string) => {
       if (url === '/projects') return Promise.resolve({ data: mockProjects })
@@ -419,8 +419,8 @@ describe('ProjectsPage – Inline Customer Creation', () => {
       ).not.toBeInTheDocument()
     })
 
-    // Should still offer "+ New Customer" action
-    expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+    // Should still offer "New Customer" action
+    expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
   })
 
   // ── Feature: Form resets on popover close ──────────────────────────────
@@ -436,11 +436,11 @@ describe('ProjectsPage – Inline Customer Creation', () => {
     await openCustomerCombobox(user)
 
     await waitFor(() => {
-      expect(screen.getByText(/\+ New Customer/i)).toBeInTheDocument()
+      expect(screen.getByText(/New Customer/i)).toBeInTheDocument()
     })
 
     // Enter create mode and type something
-    await user.click(screen.getByText(/\+ New Customer/i))
+    await user.click(screen.getByText(/New Customer/i))
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/customer name/i)).toBeInTheDocument()

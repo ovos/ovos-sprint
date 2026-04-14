@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
 import { sql, relations } from 'drizzle-orm'
 
 export const users = sqliteTable('users', {
@@ -80,7 +80,10 @@ export const projectAssignments = sqliteTable('project_assignments', {
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-})
+}, (table) => ({
+  projectIdx: index('idx_project_assignments_project').on(table.projectId),
+  memberIdx: index('idx_project_assignments_member').on(table.teamMemberId),
+}))
 
 export const dayAssignments = sqliteTable('day_assignments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -92,7 +95,10 @@ export const dayAssignments = sqliteTable('day_assignments', {
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-})
+}, (table) => ({
+  assignmentIdx: index('idx_day_assignments_assignment').on(table.projectAssignmentId),
+  dateIdx: index('idx_day_assignments_date').on(table.date),
+}))
 
 export const assignmentGroups = sqliteTable('assignment_groups', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -158,7 +164,9 @@ export const milestones = sqliteTable('milestones', {
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-})
+}, (table) => ({
+  projectIdx: index('idx_milestones_project').on(table.projectId),
+}))
 
 export const dayOffs = sqliteTable('day_offs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -169,7 +177,9 @@ export const dayOffs = sqliteTable('day_offs', {
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-})
+}, (table) => ({
+  memberIdx: index('idx_day_offs_member').on(table.teamMemberId),
+}))
 
 // Types
 export type User = typeof users.$inferSelect

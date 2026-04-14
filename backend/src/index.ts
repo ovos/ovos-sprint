@@ -20,6 +20,7 @@ import milestonesRoutes from './routes/milestones.js'
 import dayOffsRoutes from './routes/day-offs.js'
 import { setupWebSocket } from './websocket/index.js'
 import { emailService } from './services/email/emailService.js'
+import { getAllowedOrigins } from './utils/corsOrigins.js'
 
 // Environment validation for production
 function validateEnvironment() {
@@ -106,12 +107,7 @@ app.use(helmet({
 }));
 
 // CORS: Backend handles CORS in all environments
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  ...(process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('//www.')
-    ? [process.env.FRONTEND_URL.replace('//', '//www.')]
-    : []),
-];
+const allowedOrigins = getAllowedOrigins();
 
 app.use(cors({
   origin: (origin, callback) => {

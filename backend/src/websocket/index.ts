@@ -1,11 +1,12 @@
 import { Server as SocketIOServer } from 'socket.io'
 import { Server as HTTPServer } from 'http'
 import { verifyToken } from '../utils/jwt.js'
+import { getAllowedOrigins } from '../utils/corsOrigins.js'
 
 export function setupWebSocket(httpServer: HTTPServer) {
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: getAllowedOrigins(),
       credentials: true,
     },
   })

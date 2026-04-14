@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ErrorBoundary } from 'react-error-boundary'
+import { ErrorFallback } from './components/ErrorFallback'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useAuthStore } from './store/auth'
 import { Toaster } from './components/ui/toaster'
@@ -68,6 +70,7 @@ function App() {
   const content = (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
+      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -127,6 +130,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
+      </ErrorBoundary>
       </Suspense>
       <Toaster />
     </BrowserRouter>

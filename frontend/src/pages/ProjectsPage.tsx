@@ -46,6 +46,159 @@ import { SortableTableHeader } from '@/components/SortableTableHeader'
 
 type ProjectSortKey = 'name' | 'status' | 'customerName' | 'managerEmail'
 
+function ProjectTable({
+  projects,
+  canEdit,
+  onEdit,
+  onDelete,
+  onAssign,
+  sortKey,
+  sortOrder,
+  toggleSort,
+  onStatusChange,
+}: {
+  projects: Project[]
+  canEdit: (project: Project) => boolean
+  onEdit: (project: Project) => void
+  onDelete: (project: Project) => void
+  onAssign: (project: Project) => void
+  sortKey: ProjectSortKey
+  sortOrder: 'asc' | 'desc'
+  toggleSort: (key: ProjectSortKey) => void
+  onStatusChange: (project: Project, status: ProjectStatus) => void
+}) {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <SortableTableHeader
+              label="Name"
+              sortKey="name"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+            />
+            <SortableTableHeader
+              label="Customer"
+              sortKey="customerName"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+              className="hidden md:table-cell"
+            />
+            <SortableTableHeader
+              label="Status"
+              sortKey="status"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+            />
+            <SortableTableHeader
+              label="Manager"
+              sortKey="managerEmail"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+              className="hidden lg:table-cell"
+            />
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {projects.map((project) => (
+            <TableRow key={project.id} className={cn(!canEdit(project) && 'opacity-75')}>
+              <TableCell className="font-medium">{project.name}</TableCell>
+              <TableCell className="hidden md:table-cell" >
+                {project.customer?.icon && `${project.customer.icon} `}
+                {project.customer?.name || 'Unknown'}
+              </TableCell>
+              <TableCell>
+                <Select
+                  value={project.status}
+                  onValueChange={(value) => {
+                    onStatusChange(project, value as ProjectStatus)
+                  }}
+                  disabled={!canEdit(project)}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      'w-[130px] h-7 border-0',
+                      project.status === 'confirmed'
+                        ? 'bg-confirmed text-green-700 dark:bg-confirmed/40 dark:text-green-400'
+                        : project.status === 'tentative'
+                          ? 'bg-tentative text-slate-700 dark:bg-tentative/20 dark:text-slate-300'
+                          : 'bg-slate-400 text-slate-800 dark:bg-slate-600 dark:text-slate-200'
+                    )}
+                  >
+                    <SelectValue>
+                      <div className="flex items-center gap-1.5">
+                        {project.status === 'confirmed' ? (
+                          <CheckCircle2 className="h-3 w-3" />
+                        ) : project.status === 'tentative' ? (
+                          <Clock className="h-3 w-3" />
+                        ) : (
+                          <Archive className="h-3 w-3" />
+                        )}
+                        <span className="capitalize">{project.status}</span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="confirmed">
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Confirmed
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="tentative">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
+                        Tentative
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="archived">
+                      <div className="flex items-center gap-1.5">
+                        <Archive className="h-3 w-3" />
+                        Archived
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell className="hidden lg:table-cell text-muted-foreground">
+                {project.manager?.email || '-'}
+              </TableCell>
+              <TableCell className="text-right">
+                {canEdit(project) ? (
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onAssign(project)}>
+                      <Users className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(project)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(project)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">View only</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 export default function ProjectsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -248,154 +401,6 @@ export default function ProjectsPage() {
     }
   }
 
-  const ProjectTable = ({
-    projects,
-    canEdit,
-    onEdit,
-    onDelete,
-    onAssign,
-  }: {
-    projects: Project[]
-    canEdit: (project: Project) => boolean
-    onEdit: (project: Project) => void
-    onDelete: (project: Project) => void
-    onAssign: (project: Project) => void
-  }) => (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableTableHeader
-              label="Name"
-              sortKey="name"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-            />
-            <SortableTableHeader
-              label="Customer"
-              sortKey="customerName"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-              className="hidden md:table-cell"
-            />
-            <SortableTableHeader
-              label="Status"
-              sortKey="status"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-            />
-            <SortableTableHeader
-              label="Manager"
-              sortKey="managerEmail"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-              className="hidden lg:table-cell"
-            />
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {projects.map((project) => (
-            <TableRow key={project.id} className={cn(!canEdit(project) && 'opacity-75')}>
-              <TableCell className="font-medium">{project.name}</TableCell>
-              <TableCell className="hidden md:table-cell" >
-                {project.customer?.icon && `${project.customer.icon} `}
-                {project.customer?.name || 'Unknown'}
-              </TableCell>
-              <TableCell>
-                <Select
-                  value={project.status}
-                  onValueChange={(value) => {
-                    updateMutation.mutate({
-                      id: project.id,
-                      customerId: project.customerId,
-                      name: project.name,
-                      status: value as ProjectStatus,
-                    })
-                  }}
-                  disabled={!canEdit(project)}
-                >
-                  <SelectTrigger
-                    className={cn(
-                      'w-[130px] h-7 border-0',
-                      project.status === 'confirmed'
-                        ? 'bg-confirmed text-green-700 dark:bg-confirmed/40 dark:text-green-400'
-                        : project.status === 'tentative'
-                          ? 'bg-tentative text-slate-700 dark:bg-tentative/20 dark:text-slate-300'
-                          : 'bg-slate-400 text-slate-800 dark:bg-slate-600 dark:text-slate-200'
-                    )}
-                  >
-                    <SelectValue>
-                      <div className="flex items-center gap-1.5">
-                        {project.status === 'confirmed' ? (
-                          <CheckCircle2 className="h-3 w-3" />
-                        ) : project.status === 'tentative' ? (
-                          <Clock className="h-3 w-3" />
-                        ) : (
-                          <Archive className="h-3 w-3" />
-                        )}
-                        <span className="capitalize">{project.status}</span>
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="confirmed">
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Confirmed
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="tentative">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" />
-                        Tentative
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="archived">
-                      <div className="flex items-center gap-1.5">
-                        <Archive className="h-3 w-3" />
-                        Archived
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell className="hidden lg:table-cell text-muted-foreground">
-                {project.manager?.email || '-'}
-              </TableCell>
-              <TableCell className="text-right">
-                {canEdit(project) ? (
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onAssign(project)}>
-                      <Users className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(project)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(project)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">View only</span>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-
   return (
     <div className="container mx-auto">
       <motion.div
@@ -459,6 +464,10 @@ export default function ProjectsPage() {
                   }}
                   onDelete={handleDeleteClick}
                   onAssign={(project) => setAssigningProject(project)}
+                  sortKey={sortKey}
+                  sortOrder={sortOrder}
+                  toggleSort={toggleSort}
+                  onStatusChange={(project, status) => updateMutation.mutate({ id: project.id, customerId: project.customerId, name: project.name, status })}
                 />
               </div>
             )}
@@ -473,6 +482,10 @@ export default function ProjectsPage() {
                   onEdit={() => { }}
                   onDelete={() => { }}
                   onAssign={() => { }}
+                  sortKey={sortKey}
+                  sortOrder={sortOrder}
+                  toggleSort={toggleSort}
+                  onStatusChange={(project, status) => updateMutation.mutate({ id: project.id, customerId: project.customerId, name: project.name, status })}
                 />
               </div>
             )}
@@ -497,6 +510,10 @@ export default function ProjectsPage() {
               }}
               onDelete={handleDeleteClick}
               onAssign={(project) => setAssigningProject(project)}
+              sortKey={sortKey}
+              sortOrder={sortOrder}
+              toggleSort={toggleSort}
+              onStatusChange={(project, status) => updateMutation.mutate({ id: project.id, customerId: project.customerId, name: project.name, status })}
             />
 
             {sortedProjects.length === 0 && (

@@ -33,6 +33,92 @@ import { SortableTableHeader } from '@/components/SortableTableHeader'
 
 type CustomerSortKey = 'name' | 'createdAt' | 'managerEmail'
 
+function CustomerTable({
+  customers,
+  canEdit,
+  onEdit,
+  onDelete,
+  sortKey,
+  sortOrder,
+  toggleSort,
+}: {
+  customers: Customer[]
+  canEdit: (customer: Customer) => boolean
+  onEdit: (customer: Customer) => void
+  onDelete: (customer: Customer) => void
+  sortKey: CustomerSortKey
+  sortOrder: 'asc' | 'desc'
+  toggleSort: (key: CustomerSortKey) => void
+}) {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Icon</TableHead>
+            <SortableTableHeader
+              label="Name"
+              sortKey="name"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+            />
+            <SortableTableHeader
+              label="Manager"
+              sortKey="managerEmail"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+              className="hidden md:table-cell"
+            />
+            <SortableTableHeader
+              label="Created"
+              sortKey="createdAt"
+              currentSortKey={sortKey}
+              currentSortOrder={sortOrder}
+              onSort={toggleSort}
+            />
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {customers.map((customer) => (
+            <TableRow key={customer.id} className={cn(!canEdit(customer) && 'opacity-75')}>
+              <TableCell className="text-2xl">{customer.icon || '-'}</TableCell>
+              <TableCell className="font-medium">{customer.name}</TableCell>
+              <TableCell className="hidden md:table-cell text-muted-foreground">
+                {customer.manager?.email || '-'}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {new Date(customer.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell className="text-right">
+                {canEdit(customer) ? (
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(customer)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(customer)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">View only</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 export default function CustomersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
@@ -167,84 +253,6 @@ export default function CustomersPage() {
   const myCustomers = sortedCustomers.filter((c) => c.managerId === user?.id)
   const otherCustomers = sortedCustomers.filter((c) => c.managerId !== user?.id)
 
-  const CustomerTable = ({
-    customers,
-    canEdit,
-    onEdit,
-    onDelete,
-  }: {
-    customers: Customer[]
-    canEdit: (customer: Customer) => boolean
-    onEdit: (customer: Customer) => void
-    onDelete: (customer: Customer) => void
-  }) => (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Icon</TableHead>
-            <SortableTableHeader
-              label="Name"
-              sortKey="name"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-            />
-            <SortableTableHeader
-              label="Manager"
-              sortKey="managerEmail"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-              className="hidden md:table-cell"
-            />
-            <SortableTableHeader
-              label="Created"
-              sortKey="createdAt"
-              currentSortKey={sortKey}
-              currentSortOrder={sortOrder}
-              onSort={toggleSort}
-            />
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {customers.map((customer) => (
-            <TableRow key={customer.id} className={cn(!canEdit(customer) && 'opacity-75')}>
-              <TableCell className="text-2xl">{customer.icon || '-'}</TableCell>
-              <TableCell className="font-medium">{customer.name}</TableCell>
-              <TableCell className="hidden md:table-cell text-muted-foreground">
-                {customer.manager?.email || '-'}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {new Date(customer.createdAt).toLocaleDateString()}
-              </TableCell>
-              <TableCell className="text-right">
-                {canEdit(customer) ? (
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(customer)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(customer)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground">View only</span>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-
   return (
     <div className="container mx-auto">
     <motion.div
@@ -294,6 +302,9 @@ export default function CustomersPage() {
                 canEdit={() => true}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+                toggleSort={toggleSort}
               />
             </div>
           )}
@@ -307,6 +318,9 @@ export default function CustomersPage() {
                 canEdit={() => false}
                 onEdit={() => {}}
                 onDelete={() => {}}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+                toggleSort={toggleSort}
               />
             </div>
           )}
@@ -325,6 +339,9 @@ export default function CustomersPage() {
             canEdit={() => true}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+            toggleSort={toggleSort}
           />
 
           {sortedCustomers.length === 0 && (
