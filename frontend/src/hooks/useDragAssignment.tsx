@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { UseMutationResult } from '@tanstack/react-query'
 import { format, addDays } from 'date-fns'
-import debounce from 'lodash.debounce'
 import { isHoliday, getHolidayName } from '@/lib/holidays'
 import { useDragContext } from '@/contexts/DragContext'
 import { getContiguousRangeForDate, addDaysToDateString, daysDifference } from '@/lib/timeline-helpers'
@@ -43,25 +42,6 @@ export function useDragAssignment(
 ) {
   // Use DragContext instead of local state to prevent Timeline re-renders
   const { getDragState, setDragState: setContextDragState, isDayInDragRange } = useDragContext()
-
-  /**
-   * Debounced version of setDragState for smooth drag updates (~60fps)
-   */
-  const debouncedSetDragState = useMemo(
-    () => debounce((newState: { assignmentId: number | null; startDate: Date | null; endDate: Date | null; mode: 'create' | 'delete' | 'move' | null; moveSource?: { startDate: string; endDate: string }; moveAnchor?: string; moveOffset?: number }) => {
-      setContextDragState(newState)
-    }, 16), // ~60fps
-    [setContextDragState]
-  )
-
-  /**
-   * Cleanup debounced function on unmount
-   */
-  useEffect(() => {
-    return () => {
-      debouncedSetDragState.cancel()
-    }
-  }, [debouncedSetDragState])
 
   /**
    * Check if current user can edit a specific assignment
@@ -149,20 +129,20 @@ export function useDragAssignment(
         // Use daysDifference to avoid timezone issues
         const offset = daysDifference(currentState.moveAnchor, date)
 
-        debouncedSetDragState({
+        setContextDragState({
           ...currentState,
           endDate: date,
           moveOffset: offset,
         })
       } else {
         // CREATE or DELETE mode - just update end date
-        debouncedSetDragState({
+        setContextDragState({
           ...currentState,
           endDate: date,
         })
       }
     }
-  }, [getDragState, debouncedSetDragState])
+  }, [getDragState, setContextDragState])
 
   /**
    * Handle mouse up to complete drag and create assignments

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useCallback } from 'react'
+import { useRef, useEffect, useMemo, useCallback, useState } from 'react'
 import type { Milestone, AssignmentGroup, AssignmentPriority } from '@/types'
 import { isWeekend } from '@/lib/holidays'
 import { TooltipProvider } from './ui/tooltip'
@@ -241,8 +241,13 @@ function TimelineInner({
     moveAssignmentMutation
   )
 
-  // Get drag state for visual feedback
-  const { getDragState } = useDragContext()
+  // Get drag state for visual feedback — subscribe so it's reactive during drags.
+  // dragVersion state triggers re-renders; getDragState() reads the current ref value.
+  const { getDragState, subscribe } = useDragContext()
+  const [, setDragVersion] = useState(0)
+  useEffect(() => {
+    return subscribe(() => setDragVersion(v => v + 1))
+  }, [subscribe])
   const dragState = getDragState()
 
   // Reset initialization flag when view mode changes

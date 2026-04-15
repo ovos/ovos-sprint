@@ -53,8 +53,6 @@ export function DragProvider({ children }: DragProviderProps) {
   // Subscribers that want to be notified of drag updates
   const subscribersRef = useRef<Set<() => void>>(new Set())
 
-
-
   // Get current drag state (stable reference)
   const getDragState = useCallback(() => {
     return dragStateRef.current

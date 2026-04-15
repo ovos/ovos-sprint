@@ -41,6 +41,7 @@ export function useTimelineMutations() {
         queryKey: ['assignment-groups'],
         type: 'all'
       })
+      toast({ title: 'Assignment created' })
     },
   })
 
@@ -88,6 +89,9 @@ export function useTimelineMutations() {
       if (context?.previousDays) {
         queryClient.setQueryData(['assignments', 'days'], context.previousDays)
       }
+    },
+    onSuccess: () => {
+      toast({ title: 'Assignment created' })
     },
     onSettled: () => {
       // Refetch once after mutation settles (success or error)
