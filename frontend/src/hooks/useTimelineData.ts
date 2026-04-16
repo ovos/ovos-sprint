@@ -11,6 +11,13 @@ import {
   AssignmentGroup,
 } from '@/types'
 
+// Stale-time tiers for React Query caching.
+// Mutations in useTimelineMutations.ts use invalidateQueries/refetchQueries on success,
+// which bypasses staleTime — so these values only affect remount/refocus behavior.
+const STALE_TIME_STATIC = 5 * 60 * 1000   // 5 min — projects, members, settings, team relationships
+const STALE_TIME_DATE_RANGE = 30 * 1000    // 30 sec — day assignments, milestones, day-offs, assignment groups
+const STALE_TIME_ASSIGNMENTS = 60 * 1000   // 1 min — project assignments
+
 /**
  * Custom hook for fetching all timeline data with queries
  *
@@ -48,6 +55,7 @@ export function useTimelineData(
       const response = await api.get('/projects')
       return response.data as Project[]
     },
+    staleTime: STALE_TIME_STATIC,
   })
 
   // Fetch all team members
@@ -57,6 +65,7 @@ export function useTimelineData(
       const response = await api.get('/members')
       return response.data as TeamMember[]
     },
+    staleTime: STALE_TIME_STATIC,
   })
 
   // Fetch project assignments
@@ -66,6 +75,7 @@ export function useTimelineData(
       const response = await api.get('/assignments/projects')
       return response.data
     },
+    staleTime: STALE_TIME_ASSIGNMENTS,
   })
 
   // Fetch day assignments for date range
@@ -85,6 +95,7 @@ export function useTimelineData(
       })
       return response.data
     },
+    staleTime: STALE_TIME_DATE_RANGE,
   })
 
   // Fetch milestones for date range
@@ -103,6 +114,7 @@ export function useTimelineData(
       })
       return response.data as Milestone[]
     },
+    staleTime: STALE_TIME_DATE_RANGE,
   })
 
   // Fetch day offs for date range
@@ -121,6 +133,7 @@ export function useTimelineData(
       })
       return response.data as DayOff[]
     },
+    staleTime: STALE_TIME_DATE_RANGE,
   })
 
   // Fetch settings
@@ -130,6 +143,7 @@ export function useTimelineData(
       const response = await api.get('/settings')
       return response.data as Record<string, string>
     },
+    staleTime: STALE_TIME_STATIC,
   })
 
   // Fetch team member relationships
@@ -139,6 +153,7 @@ export function useTimelineData(
       const response = await api.get('/teams/members/relationships')
       return response.data as { teamId: number; teamMemberId: number }[]
     },
+    staleTime: STALE_TIME_STATIC,
   })
 
   // Fetch assignment groups for date range
@@ -157,6 +172,7 @@ export function useTimelineData(
       })
       return response.data as AssignmentGroup[]
     },
+    staleTime: STALE_TIME_DATE_RANGE,
   })
 
   // Memoize filtered projects to avoid recalculating on every render

@@ -66,7 +66,9 @@ export function TimelineViewContent({
   viewMode,
   items,
   projects,
-  members,
+  members: _members,
+  memberById,
+  projectById,
   projectAssignments,
   dayAssignments,
   milestones,
@@ -151,9 +153,7 @@ export function TimelineViewContent({
 
                 {expandedItems.has(project.id) &&
                   visibleAssignments.map((assignment: ProjectAssignment) => {
-                      const member = members.find(
-                        (m) => m.id === assignment.teamMemberId
-                      )
+                      const member = memberById.get(assignment.teamMemberId)
                       if (!member) return null
 
                       return (
@@ -254,9 +254,7 @@ export function TimelineViewContent({
 
               {expandedItems.has(member.id) &&
                 visibleAssignments.map((assignment: ProjectAssignment) => {
-                    const project = projects.find(
-                      (p) => p.id === assignment.projectId
-                    )
+                    const project = projectById.get(assignment.projectId)
                     if (!project) return null
 
                     // Hide tentative projects if showTentative is disabled

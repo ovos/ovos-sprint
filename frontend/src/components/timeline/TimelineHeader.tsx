@@ -6,6 +6,17 @@ import { ZOOM_PIXEL_WIDTHS } from '@/lib/timeline-constants'
 import type { TimelineHeaderProps, ZoomLevel } from './types'
 
 /**
+ * Timeline z-index stacking order:
+ *   z-20   Assignment bars & comment overlays
+ *   z-30   Priority indicators & delete drag overlay
+ *   z-50   Sticky sidebars (left-pinned columns)
+ *   z-[60] Sticky timeline header (top-pinned rows)
+ *   z-[65] AssignmentEditPopover (portaled, above all timeline chrome)
+ *   z-[70] shadcn/ui overlays (Tooltip, Popover, Dialog, Select)
+ *   z-[100] Toast notifications
+ */
+
+/**
  * TimelineHeader Component
  *
  * Renders the timeline header with month groups and date columns.

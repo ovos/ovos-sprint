@@ -138,6 +138,12 @@ function TimelineInner({
     return index
   }, [members])
 
+  const projectIndex = useMemo(() => {
+    const index = new Map<number, any>()
+    projects.forEach(p => index.set(p.id, p))
+    return index
+  }, [projects])
+
   const dayOffIndex = useMemo(() => {
     const index = new Set<string>() // key: "memberId-date"
     dayOffs.forEach((dayOff: any) => {
@@ -390,6 +396,8 @@ function TimelineInner({
       items={filteredProjects}
       projects={projects}
       members={filteredMembersWithProjects}
+      memberById={memberIndex}
+      projectById={projectIndex}
       projectAssignments={projectAssignments}
       dayAssignments={dayAssignments}
       milestones={milestones}
@@ -428,6 +436,8 @@ function TimelineInner({
       items={filteredMembersWithProjects}
       projects={projects}
       members={filteredMembersWithProjects}
+      memberById={memberIndex}
+      projectById={projectIndex}
       projectAssignments={projectAssignments}
       dayAssignments={dayAssignments}
       milestones={milestones}

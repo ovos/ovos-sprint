@@ -28,6 +28,8 @@ export interface TimelineViewContentProps {
   items: (Project | TeamMember)[]
   projects: Project[]
   members: TeamMember[]
+  memberById: Map<number, TeamMember>
+  projectById: Map<number, Project>
   projectAssignments: ProjectAssignment[]
   dayAssignments: DayAssignment[]
   milestones: Milestone[]
