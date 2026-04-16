@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import {
@@ -45,7 +46,7 @@ import type { ExpandedAssignmentBarProps } from './types'
  * @param onContextMenu - Right-click handler for deletion
  * @param getGroupPriority - Function to get priority for a specific date
  */
-export function ExpandedAssignmentBar({
+function ExpandedAssignmentBarComponent({
   assignmentId,
   date,
   projectAssignments: _projectAssignments,
@@ -164,3 +165,8 @@ export function ExpandedAssignmentBar({
     </div>
   )
 }
+
+// Memoize to prevent re-renders when props haven't changed.
+// Requires stable handler references — see handleBarMouseDown/handleBarClick/handleBarContextMenu
+// in AssignmentRow.tsx (curried useCallback factories).
+export const ExpandedAssignmentBar = memo(ExpandedAssignmentBarComponent)

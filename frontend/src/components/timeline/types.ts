@@ -16,6 +16,24 @@ import type {
 export type ZoomLevel = 1 | 2 | 3 | 4
 
 /**
+ * Precomputed date metadata for a single date cell.
+ * Used by dateInfoMap in AssignmentRow to separate pure date computation
+ * (depends only on `dates`) from render logic (depends on assignment state).
+ *
+ * Note: isDayOff is intentionally excluded — it depends on member.id
+ * and must be computed per-row at render time.
+ */
+export interface IndexedDateInfo {
+  date: Date
+  dateStr: string
+  isWeekend: boolean
+  isHoliday: boolean
+  isToday: boolean
+  isFirstDayOfMonth: boolean
+  isWeekStart: boolean
+}
+
+/**
  * Timeline Component Props
  */
 
